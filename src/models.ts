@@ -2,6 +2,7 @@ export interface Speaker {
     id: number
     name: string
     description: string
+    imagepath: string
 }
 
 export interface Stage {
@@ -9,14 +10,21 @@ export interface Stage {
     name: string
 }
 
+export interface Timeslot {
+    id: number
+
+    start_at: string
+    end_at: string
+
+    stage_id: number
+}
+
 export interface Presentation {
     id: number
     name: string
     description: string
+    long_description: string
 
-    start_date: string
-    end_date: string
-
-    stage_id: number
     speaker_id: number
+    timeslot_id: number
 }

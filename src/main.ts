@@ -1,51 +1,53 @@
-import ApiRemote from "./ApiRemote";
-import { Presentation, Speaker, Stage } from "./models";
+import ApiRemote, { ApiException } from "./ApiRemote";
+import { Presentation, Speaker, Stage, Timeslot } from "./models";
 
 async function main() {
 
 const remote = new ApiRemote("http://127.0.0.1:8000/api");
 
-const speaker: Speaker = (await remote.post("speaker/create", {
-    name: "Rytmus Vrbovsky",
-    description: "Cigan smrlavy"
-} as Speaker)).speaker!!;
+const speaker = (await remote.post("speaker/create", {
+    name: "Patrik Vrbovsky",
+    description: "popis",
+    imagepath: "null"
+} as Speaker)).speaker;
 
 const stage: Stage = (await remote.post("stage/create", {
-    name: "THAP0106"
-} as Stage)).stage!!;
+    name: "THP0106"
+} as Stage)).stage;
 
-console.log(speaker, stage);
-
-const presentation: Presentation = (await remote.post("presentation/create", {
-    name: "Presentation test",
-    description: "Presentation desc",
-
-    start_date: "2024-01-12 12:00:00",
-    end_date: "2024-01-12 13:00:00",
-
+const timeslot: Timeslot = (await remote.post("timeslot/create", {
     stage_id: stage.id,
-    speaker_id: speaker.id
-} as Presentation)).presentation!!;
+    start_at: "2024-01-01 12:00:00",
+    end_at: "2024-01-01 13:00:00"
+} as Timeslot)).timeslot;
 
-let res = await remote.post("presentation/create", {
-    name: "Presentation test 2",
-    description: "Presentation desc",
-
-    start_date: "2024-01-12 12:30:00",
-    end_date: "2024-01-12 13:30:00",
-
-    stage_id: stage.id,
-    speaker_id: speaker.id 
-} as Presentation);
-
-if (res.code) {
-    console.log("Overlaps", res.overlaps);
-} else {
-    console.log(res.presentation);
+try {
+    const timeslot2: Timeslot = (await remote.post("timeslot/create", {
+        stage_id: stage.id,
+        start_at: "2024-01-01 12:30:00",
+        end_at: "2024-01-01 14:00:00"
+    } as Timeslot)).timeslot;
+} catch (e) {
+    (e as ApiException).handle(1, (data: { overlaps: Timeslot[] }) => {
+        console.log(data.overlaps);
+    });
 }
 
+const presentation: Presentation = (await remote.post("presentation/create", {
+    name: "Presentation",
+    speaker_id: speaker.id,
+    timeslot_id: timeslot.id,
+    description: "desc",
+    long_description: "ldesc"
+} as Presentation)).presentation;
 
+console.log(speaker, stage, timeslot, presentation);
 
+const presentation2: Presentation = (await remote.post("presentation/create", {
+    name: "Presentation",
+    speaker_id: speaker.id,
+    timeslot_id: timeslot.id,
+} as Presentation)).presentation;
 
 }
 
