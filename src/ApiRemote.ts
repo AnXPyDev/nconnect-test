@@ -1,5 +1,9 @@
 import axios, { Axios } from "axios";
 
+export enum ApiCodes {
+    NoAuth = 666
+};
+
 export class ApiException extends Error {
     code: number;
     data: object;
@@ -19,12 +23,27 @@ export class ApiException extends Error {
 }
 
 export default class ApiRemote {
-    connection: Axios;
+    baseURL: string;
+    args: object;
+    headers: object;
+    connection!: Axios;
 
-    constructor(baseURL: string, args: object = {}) {
+    constructor(baseURL: string, args: object = {}, headers = {}) {
+        this.baseURL = baseURL;
+        this.args = args;
+        this.headers = {
+            "Accept": "application/json",
+            ...headers
+        };
+    }
+
+    init() {
         this.connection = axios.create({
-            baseURL, ...args
+            baseURL: this.baseURL,
+            headers: this.headers,
+            ...this.args,
         });
+        return this;
     }
 
     async post(endpoint: string, data: object = {}): Promise<any> {
@@ -35,5 +54,12 @@ export default class ApiRemote {
         }
 
         return res;
+    }
+
+    withToken(token: string) {
+        return new ApiRemote(this.baseURL, this.args, {
+            ...this.headers,
+            "Authorization": `Bearer ${token}`
+        });
     }
 }
